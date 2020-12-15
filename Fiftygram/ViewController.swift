@@ -2,10 +2,33 @@ import UIKit
 
 class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     @IBOutlet var imageView: UIImageView!
-
+    
     let context = CIContext()
     var original: UIImage!
+    
+    // MARK: "Choose Photo" Implementation
+    @IBAction func choosePhoto(_ sender: UIBarButtonItem) {
+        if UIImagePickerController.isSourceTypeAvailable(.photoLibrary) {
+            let picker = UIImagePickerController()
+            picker.delegate = self
+            picker.sourceType = .photoLibrary
+            self.navigationController?.present(picker, animated: true, completion: nil)
+        }
+    }
+    
+    // imagePicker delegate function
+    func imagePickerController(
+        _ picker: UIImagePickerController,
+        didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
+    ) {
+        self.navigationController?.dismiss(animated: true, completion: nil)
+        if let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
+            imageView.image = image
+            original = image
+        }
+    }
 
+    // MARK: Photo filters implementation
     @IBAction func applySepia() {
         if original == nil {
             return
@@ -37,28 +60,13 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         display(filter: filter!)
     }
 
-    @IBAction func choosePhoto(_ sender: UIBarButtonItem) {
-        if UIImagePickerController.isSourceTypeAvailable(.photoLibrary) {
-            let picker = UIImagePickerController()
-            picker.delegate = self
-            picker.sourceType = .photoLibrary
-            self.navigationController?.present(picker, animated: true, completion: nil)
-        }
-    }
-
     func display(filter: CIFilter) {
         let output = filter.outputImage!
         imageView.image = UIImage(cgImage: self.context.createCGImage(output, from: output.extent)!)
     }
 
-    func imagePickerController(
-        _ picker: UIImagePickerController,
-        didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
-    ) {
-        self.navigationController?.dismiss(animated: true, completion: nil)
-        if let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
-            imageView.image = image
-            original = image
-        }
+    // MARK: Save photo implementation
+    @IBAction func savePhoto() {
+        UIImageWriteToSavedPhotosAlbum(imageView.image!, nil, nil, nil)
     }
 }
